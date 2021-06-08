@@ -26,6 +26,7 @@
 <script>
 import XAxis from './XAxis.vue';
 import YAxis from './YAxis.vue';
+import chartData from '../../chartData.json';
 
 export default {
   name: 'LineGraph',
@@ -106,6 +107,7 @@ export default {
         // ['49일', 4430],
         // ['50일', 5320],
       ],
+      chartData: chartData,
 
       baseStartIndex: null,
       baseEndIndex: null,
@@ -495,6 +497,8 @@ export default {
   created() {
     this.startIndex = 0;
     this.endIndex = this.data.length - 1;
+
+    console.log(this.chartData);
   },
 
   mounted() {
