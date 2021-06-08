@@ -70,15 +70,6 @@ export default {
             4
         );
       }
-      // this.valueData.forEach((value, index) => {
-      //   this.ctx.fillText(
-      //     `${(this.floorValue + value).toFixed(3)}`,
-      //     10,
-      //     this.graphBoxMargin +
-      //       (this.graphBoxHeight / this.valueData.length) * index +
-      //       4
-      //   );
-      // });
     },
 
     writeCurrent() {

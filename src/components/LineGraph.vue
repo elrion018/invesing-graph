@@ -55,60 +55,7 @@ export default {
       currentHeight: 0,
       graphBoxColor: 'green',
       graphColor: 'green',
-      // data: [
-      //   ['1일', 320],
-      //   ['2일', 350],
-      //   ['3일', 230],
-      //   ['4일', 320],
-      //   ['5일', 220],
-      //   ['6일', 430],
-      //   ['7일', 450],
-      //   ['8일', 250],
-      //   ['9일', 430],
-      //   ['10일', 420],
-      //   ['11일', 520],
-      //   ['12일', 650],
-      //   ['13일', 730],
-      //   ['14일', 820],
-      //   ['15일', 920],
-      //   ['16일', 1030],
-      //   ['17일', 1150],
-      //   ['18일', 1250],
-      //   ['19일', 1330],
-      //   ['20일', 1420],
-      //   ['21일', 1520],
-      //   ['22일', 1650],
-      //   ['23일', 1730],
-      //   ['24일', 1820],
-      //   ['25일', 1920],
-      //   ['26일', 2030],
-      //   ['27일', 2150],
-      //   ['28일', 2250],
-      //   ['29일', 2330],
-      //   ['30일', 2420],
-      //   ['31일', 2520],
-      //   ['32일', 2650],
-      //   ['33일', 2730],
-      //   ['34일', 2820],
-      //   ['35일', 2920],
-      //   ['36일', 3030],
-      //   ['37일', 3150],
-      //   ['38일', 3250],
-      //   ['39일', 3330],
-      //   ['40일', 3420],
-      //   ['41일', 3520],
-      //   ['42일', 3650],
-      //   ['43일', 3730],
-      //   ['44일', 3820],
-      //   ['45일', 3920],
-      //   ['46일', 4030],
-      //   ['47일', 450],
-      //   ['48일', 4250],
-      //   ['49일', 4430],
-      //   ['50일', 5320],
-      // ],
       data: chartData,
-
       baseStartIndex: null,
       baseEndIndex: null,
       targetStartIndex: null,
@@ -120,6 +67,7 @@ export default {
       timeData: [],
       valueData: [],
       tpCache: [],
+      isCandle: true,
     };
   },
 
@@ -180,29 +128,89 @@ export default {
         interval = 1;
       }
 
-      for (let i = this.startIndex; i < this.endIndex + 1; i++) {
-        const { date: time, close: value } = this.data[i];
+      if (this.isCandle) {
+        //
 
-        this.unitHeight =
-          this.graphBoxMargin +
-          this.graphBoxHeight -
-          (value - this.floorValue) * this.heightRatio;
+        for (let i = this.startIndex; i < this.endIndex + 1; i++) {
+          const { date: time, close, open, high, low } = this.data[i];
+          console.log(time, close, open, high, low);
 
-        this.ctx.lineTo(
-          this.graphBoxMargin + this.unitWidth * (i - this.startIndex),
-          this.unitHeight
-        );
+          this.unitHeight =
+            this.graphBoxMargin +
+            this.graphBoxHeight -
+            (close - this.floorValue) * this.heightRatio;
 
-        if (i % interval === 0) {
-          this.timeData.push([time, i]);
+          let unitHigh =
+            this.graphBoxMargin +
+            this.graphBoxHeight -
+            (high - this.floorValue) * this.heightRatio;
+
+          let unitLow =
+            this.graphBoxMargin +
+            this.graphBoxHeight -
+            (low - this.floorValue) * this.heightRatio;
+
+          this.ctx.moveTo(
+            this.graphBoxMargin + this.unitWidth * (i - this.startIndex),
+            unitHigh
+          );
+
+          this.ctx.lineTo(
+            this.graphBoxMargin + this.unitWidth * (i - this.startIndex),
+            unitLow
+          );
         }
       }
-      this.ctx.lineTo(
-        this.graphBoxMargin + this.graphBoxWidth,
-        this.graphBoxMargin + this.graphBoxHeight
-      );
+
+      if (!this.isCandle) {
+        for (let i = this.startIndex; i < this.endIndex + 1; i++) {
+          const { date: time, close: value } = this.data[i];
+
+          this.unitHeight =
+            this.graphBoxMargin +
+            this.graphBoxHeight -
+            (value - this.floorValue) * this.heightRatio;
+
+          this.ctx.lineTo(
+            this.graphBoxMargin + this.unitWidth * (i - this.startIndex),
+            this.unitHeight
+          );
+
+          if (i % interval === 0) {
+            this.timeData.push([time, i]);
+          }
+        }
+        this.ctx.lineTo(
+          this.graphBoxMargin + this.graphBoxWidth,
+          this.graphBoxMargin + this.graphBoxHeight
+        );
+      }
       this.ctx.closePath();
       this.ctx.stroke();
+
+      // for (let i = this.startIndex; i < this.endIndex + 1; i++) {
+      //   const { date: time, close: value } = this.data[i];
+
+      //   this.unitHeight =
+      //     this.graphBoxMargin +
+      //     this.graphBoxHeight -
+      //     (value - this.floorValue) * this.heightRatio;
+
+      //   this.ctx.lineTo(
+      //     this.graphBoxMargin + this.unitWidth * (i - this.startIndex),
+      //     this.unitHeight
+      //   );
+
+      //   if (i % interval === 0) {
+      //     this.timeData.push([time, i]);
+      //   }
+      // }
+      // this.ctx.lineTo(
+      //   this.graphBoxMargin + this.graphBoxWidth,
+      //   this.graphBoxMargin + this.graphBoxHeight
+      // );
+      // this.ctx.closePath();
+      // this.ctx.stroke();
 
       this.drawCurrentLine(this.unitHeight);
       this.currentHeight = this.unitHeight;
