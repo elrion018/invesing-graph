@@ -295,7 +295,7 @@ export default {
     drawSelectedLine() {
       if (this.selectedIndex !== null) {
         // X 축
-        console.log(this.selectedIndex);
+        // console.log(this.selectedIndex);
         this.ctx.beginPath();
         this.ctx.moveTo(
           this.graphBoxMargin,
@@ -349,7 +349,7 @@ export default {
           ) -
           1;
 
-        this.selectedValue = this.data[this.selectedIndex][1];
+        this.selectedValue = this.data[this.selectedIndex].close;
       } else if (event.targetTouches.length === 2) {
         this.selectedIndex = null;
 
