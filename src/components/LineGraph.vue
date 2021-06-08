@@ -140,6 +140,11 @@ export default {
             this.graphBoxHeight -
             (close - this.floorValue) * this.heightRatio;
 
+          let unitOpen =
+            this.graphBoxMargin +
+            this.graphBoxHeight -
+            (open - this.floorValue) * this.heightRatio;
+
           let unitHigh =
             this.graphBoxMargin +
             this.graphBoxHeight -
@@ -149,6 +154,16 @@ export default {
             this.graphBoxMargin +
             this.graphBoxHeight -
             (low - this.floorValue) * this.heightRatio;
+
+          this.ctx.fillStyle = 'red';
+          this.ctx.fillRect(
+            this.graphBoxMargin +
+              this.unitWidth * (i - this.startIndex) -
+              this.unitWidth / 2,
+            this.unitHeight,
+            5,
+            Math.abs(this.unitHeight - unitOpen)
+          );
 
           this.ctx.moveTo(
             this.graphBoxMargin + this.unitWidth * (i - this.startIndex),
