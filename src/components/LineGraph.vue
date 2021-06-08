@@ -1,0 +1,554 @@
+<template>
+  <div>
+    <div>
+      <canvas ref="graph" :width="canvasWidth" :height="canvasHeight"></canvas>
+      <y-axis
+        :valueData="valueData"
+        :graphBoxHeight="graphBoxHeight"
+        :canvasHeight="canvasHeight"
+        :floorValue="floorValue"
+        :graphBoxMargin="graphBoxMargin"
+        :currentValue="currentValue"
+        :currentHeight="currentHeight"
+      ></y-axis>
+    </div>
+
+    <x-axis
+      :timeData="timeData"
+      :unitWidth="unitWidth"
+      :startIndex="startIndex"
+      :graphBoxMargin="graphBoxMargin"
+      :canvasWidth="canvasWidth + 50"
+    ></x-axis>
+  </div>
+</template>
+
+<script>
+import XAxis from './XAxis.vue';
+import YAxis from './YAxis.vue';
+
+export default {
+  name: 'LineGraph',
+  components: {
+    XAxis,
+    YAxis,
+  },
+
+  props: {
+    canvasWidth: {
+      type: Number,
+      required: true,
+    },
+
+    canvasHeight: {
+      type: Number,
+      required: true,
+    },
+  },
+
+  data() {
+    return {
+      ctx: null,
+      graphBoxMargin: 10,
+      unitHeight: null,
+      currentHeight: 0,
+      graphBoxColor: 'green',
+      graphColor: 'green',
+      data: [
+        ['1일', 320],
+        ['2일', 350],
+        ['3일', 230],
+        ['4일', 320],
+        ['5일', 220],
+        ['6일', 430],
+        ['7일', 450],
+        ['8일', 250],
+        ['9일', 430],
+        ['10일', 420],
+        ['11일', 520],
+        ['12일', 650],
+        ['13일', 730],
+        ['14일', 820],
+        ['15일', 920],
+        ['16일', 1030],
+        ['17일', 1150],
+        ['18일', 1250],
+        ['19일', 1330],
+        ['20일', 1420],
+        // ['21일', 1520],
+        // ['22일', 1650],
+        // ['23일', 1730],
+        // ['24일', 1820],
+        // ['25일', 1920],
+        // ['26일', 2030],
+        // ['27일', 2150],
+        // ['28일', 2250],
+        // ['29일', 2330],
+        // ['30일', 2420],
+        // ['31일', 2520],
+        // ['32일', 2650],
+        // ['33일', 2730],
+        // ['34일', 2820],
+        // ['35일', 2920],
+        // ['36일', 3030],
+        // ['37일', 3150],
+        // ['38일', 3250],
+        // ['39일', 3330],
+        // ['40일', 3420],
+        // ['41일', 3520],
+        // ['42일', 3650],
+        // ['43일', 3730],
+        // ['44일', 3820],
+        // ['45일', 3920],
+        // ['46일', 4030],
+        // ['47일', 450],
+        // ['48일', 4250],
+        // ['49일', 4430],
+        // ['50일', 5320],
+      ],
+
+      baseStartIndex: null,
+      baseEndIndex: null,
+      targetStartIndex: null,
+      targetEndIndex: null,
+      startIndex: 0,
+      selectedIndex: null,
+      selectedValue: null,
+      endIndex: null,
+      timeData: [],
+      valueData: [],
+      tpCache: [],
+    };
+  },
+
+  computed: {
+    graphBoxWidth() {
+      return this.canvasWidth - 2 * this.graphBoxMargin;
+    },
+
+    graphBoxHeight() {
+      return this.canvasHeight - 2 * this.graphBoxMargin;
+    },
+
+    ceilValue() {
+      return this.getCeilAndFloorValue().ceilValue;
+    },
+
+    floorValue() {
+      return this.getCeilAndFloorValue().floorValue;
+    },
+
+    unitWidth() {
+      return this.graphBoxWidth / (this.endIndex - this.startIndex);
+    },
+
+    heightRatio() {
+      return this.graphBoxHeight / (this.ceilValue - this.floorValue);
+    },
+
+    currentValue() {
+      return this.data[this.endIndex][1];
+    },
+  },
+
+  methods: {
+    drawGraphBox() {
+      this.ctx.strokeStyle = this.graphBoxColor;
+      this.ctx.strokeRect(
+        this.graphBoxMargin,
+        this.graphBoxMargin,
+        this.graphBoxWidth,
+        this.graphBoxHeight
+      );
+    },
+
+    drawGraph() {
+      this.ctx.strokeStyle = this.graphColor;
+      this.ctx.beginPath();
+      this.ctx.moveTo(
+        this.graphBoxMargin,
+        this.graphBoxMargin + this.graphBoxHeight
+      );
+
+      let interval = Math.floor((this.endIndex - this.startIndex) / 10);
+
+      if (interval === 1) {
+        interval = 2;
+      } else if (interval === 0) {
+        interval = 1;
+      }
+
+      for (let i = this.startIndex; i < this.endIndex + 1; i++) {
+        const [time, value] = this.data[i];
+        this.unitHeight =
+          this.graphBoxMargin +
+          this.graphBoxHeight -
+          (value - this.floorValue) * this.heightRatio;
+
+        this.ctx.lineTo(
+          this.graphBoxMargin + this.unitWidth * (i - this.startIndex),
+          this.unitHeight
+        );
+
+        if (i % interval === 0) {
+          this.timeData.push([time, i]);
+        }
+      }
+      this.ctx.lineTo(
+        this.graphBoxMargin + this.graphBoxWidth,
+        this.graphBoxMargin + this.graphBoxHeight
+      );
+      this.ctx.closePath();
+      this.ctx.stroke();
+
+      this.drawCurrentLine(this.unitHeight);
+      this.currentHeight = this.unitHeight;
+
+      const quintile = (this.ceilValue - this.floorValue) / 5;
+
+      for (let i = 5; i > 0; i--) {
+        this.valueData.push(quintile * i);
+
+        if (i !== 5) {
+          this.drawQuintileLine(i);
+        }
+      }
+    },
+
+    drawQuintileLine(index) {
+      this.ctx.globalAlpha = 0.2;
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(
+        this.graphBoxMargin,
+        this.graphBoxMargin + (this.graphBoxHeight / 5) * index + 4
+      );
+      this.ctx.lineTo(
+        this.graphBoxMargin + this.graphBoxWidth,
+        this.graphBoxMargin + (this.graphBoxHeight / 5) * index + 4
+      );
+      this.ctx.closePath();
+      this.ctx.stroke();
+
+      this.ctx.globalAlpha = 1.0;
+    },
+
+    drawCurrentLine(currentHeight) {
+      this.ctx.globalAlpha = 0.6;
+
+      this.ctx.setLineDash([10, 20]);
+      this.ctx.beginPath();
+      this.ctx.moveTo(this.graphBoxMargin, currentHeight);
+      this.ctx.lineTo(this.graphBoxMargin + this.graphBoxWidth, currentHeight);
+      this.ctx.closePath();
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+
+      this.ctx.globalAlpha = 1.0;
+    },
+
+    getCeilAndFloorValue() {
+      let ceilValue = Number.MIN_VALUE;
+      let floorValue = Number.MAX_VALUE;
+
+      for (let i = this.startIndex; i < this.endIndex + 1; i++) {
+        let value = this.data[i][1];
+
+        ceilValue = Math.max(ceilValue, value);
+        floorValue = Math.min(floorValue, value);
+      }
+
+      const diff = ceilValue - floorValue;
+      ceilValue = ceilValue + 5 * 10 ** (parseInt(Math.log10(diff)) - 1);
+      floorValue = floorValue - 5 * 10 ** (parseInt(Math.log10(diff)) - 1);
+
+      if (floorValue < 0) {
+        floorValue = 0;
+      }
+
+      return { ceilValue, floorValue };
+    },
+
+    drawVerticalLines() {
+      this.ctx.globalAlpha = 0.2;
+
+      this.timeData.forEach(([time, index]) => {
+        this.ctx.beginPath();
+        this.ctx.moveTo(
+          this.graphBoxMargin + this.unitWidth * (index - this.startIndex),
+          this.graphBoxMargin
+        );
+        this.ctx.lineTo(
+          this.graphBoxMargin + this.unitWidth * (index - this.startIndex),
+          this.graphBoxMargin + this.graphBoxHeight
+        );
+        this.ctx.closePath();
+        this.ctx.stroke();
+        console.log(time);
+      });
+
+      this.ctx.globalAlpha = 1.0;
+    },
+    drawSelectedLine() {
+      if (this.selectedIndex !== null) {
+        // X 축
+        console.log(this.selectedIndex);
+        this.ctx.beginPath();
+        this.ctx.moveTo(
+          this.graphBoxMargin,
+          this.graphBoxMargin +
+            this.graphBoxHeight -
+            (this.selectedValue - this.floorValue) * this.heightRatio
+        );
+        this.ctx.lineTo(
+          this.graphBoxMargin + this.graphBoxWidth,
+          this.graphBoxMargin +
+            this.graphBoxHeight -
+            (this.selectedValue - this.floorValue) * this.heightRatio
+        );
+        this.ctx.closePath();
+        this.ctx.stroke();
+
+        // Y 축
+        this.ctx.beginPath();
+        this.ctx.moveTo(
+          this.graphBoxMargin +
+            this.unitWidth * (this.selectedIndex - this.startIndex),
+          this.graphBoxMargin
+        );
+        this.ctx.lineTo(
+          this.graphBoxMargin +
+            this.unitWidth * (this.selectedIndex - this.startIndex),
+          this.graphBoxMargin + this.graphBoxHeight
+        );
+        this.ctx.closePath();
+        this.ctx.stroke();
+      }
+    },
+
+    touchStartHandler(event) {
+      event.preventDefault();
+      console.log('start');
+
+      const touches = event.targetTouches;
+      this.tpCache = [];
+
+      touches.forEach(touch => {
+        this.tpCache.push(touch);
+      });
+
+      if (event.targetTouches.length === 1) {
+        this.selectedIndex =
+          this.startIndex +
+          Math.round(
+            (event.targetTouches[0].clientX - this.graphBoxMargin) /
+              this.unitWidth
+          ) -
+          1;
+
+        this.selectedValue = this.data[this.selectedIndex][1];
+      } else if (event.targetTouches.length === 2) {
+        this.selectedIndex = null;
+
+        const pointIndex1 = Math.round(
+          (touches[0].clientX - this.graphBoxMargin) / this.unitWidth
+        );
+        const pointIndex2 = Math.round(
+          (touches[1].clientX - this.graphBoxMargin) / this.unitWidth
+        );
+
+        this.targetStartIndex =
+          Math.min(pointIndex1, pointIndex2) + this.startIndex;
+        this.targetEndIndex =
+          Math.max(pointIndex1, pointIndex2) + this.startIndex;
+      }
+    },
+
+    touchMoveHandler(event) {
+      event.preventDefault();
+
+      this.handlePinchZoom(event);
+    },
+
+    touchEndhandler(event) {
+      event.preventDefault();
+
+      if (event.targetTouches.length === 0) {
+        console.log('touch end');
+
+        this.baseStartIndex = this.startIndex;
+        this.baseEndIndex = this.endIndex;
+        this.targetStartIndex = null;
+        this.targetEndIndex = null;
+        this.tpCache = [];
+      }
+    },
+
+    handlePinchZoom(event) {
+      if (
+        event.targetTouches.length === 2 &&
+        event.changedTouches.length === 2
+      ) {
+        let leftBasePointClientX = -1;
+        let rightBasePointClientX = -1;
+        let leftBasePoint = -1;
+        let rightBasePoint = -1;
+
+        for (let i = 0; i < this.tpCache.length; i++) {
+          if (
+            this.tpCache[i].identifier === event.targetTouches[0].identifier
+          ) {
+            leftBasePoint = i;
+            leftBasePointClientX = this.tpCache[i].clientX;
+          }
+
+          if (
+            this.tpCache[i].identifier === event.targetTouches[1].identifier
+          ) {
+            rightBasePoint = i;
+            rightBasePointClientX = this.tpCache[i].clientX;
+          }
+        }
+
+        if (leftBasePointClientX > rightBasePointClientX) {
+          const tempPoint = leftBasePoint;
+          leftBasePoint = rightBasePoint;
+          rightBasePoint = tempPoint;
+        }
+
+        if (leftBasePoint >= 0 && rightBasePoint >= 0) {
+          const leftDiff =
+            this.tpCache[leftBasePoint].clientX -
+            event.targetTouches[leftBasePoint].clientX;
+
+          const rightDiff =
+            this.tpCache[rightBasePoint].clientX -
+            event.targetTouches[rightBasePoint].clientX;
+
+          const totalDiff = Math.abs(leftDiff) + Math.abs(rightDiff);
+          const diffIndex = Math.round(totalDiff / 20);
+
+          if (
+            leftDiff > 0 &&
+            rightDiff < 0 &&
+            this.endIndex - this.startIndex > 5
+          ) {
+            if (this.startIndex < this.targetStartIndex) {
+              if (this.baseStartIndex + diffIndex > this.targetStartIndex) {
+                this.startIndex = this.targetStartIndex;
+              } else {
+                this.startIndex = this.baseStartIndex + diffIndex;
+              }
+            }
+
+            if (this.endIndex > this.targetEndIndex) {
+              if (this.baseEndIndex - diffIndex < this.targetEndIndex) {
+                this.endIndex = this.targetEndIndex;
+              } else {
+                this.endIndex = this.baseEndIndex - diffIndex;
+              }
+            }
+          } else if (leftDiff < 0 && rightDiff > 0) {
+            if (this.startIndex > 0) {
+              if (this.baseStartIndex - diffIndex < 0) {
+                this.startIndex = 0;
+              } else {
+                this.startIndex = this.baseStartIndex - diffIndex;
+              }
+            }
+
+            if (this.endIndex < this.data.length - 1) {
+              if (this.baseEndIndex + diffIndex > this.data.length - 1) {
+                this.endIndex = this.data.length - 1;
+              } else {
+                this.endIndex = this.baseEndIndex + diffIndex;
+              }
+            }
+          }
+        }
+      } else if (
+        event.targetTouches.length === 1 &&
+        event.changedTouches.length === 1
+      ) {
+        const diff = this.tpCache[0].clientX - event.targetTouches[0].clientX;
+        const diffIndex = Math.round(Math.abs(diff) / 20);
+
+        if (diff > 0 && this.baseEndIndex + diffIndex <= this.data.length - 1) {
+          this.startIndex = this.baseStartIndex + diffIndex;
+          this.endIndex =
+            this.baseEndIndex + diffIndex > this.data.length - 1
+              ? this.data.length - 1
+              : this.baseEndIndex + diffIndex;
+        }
+
+        if (diff < 0 && this.baseStartIndex - diffIndex >= 0) {
+          this.startIndex =
+            this.baseStartIndex - diffIndex < 0
+              ? 0
+              : this.baseStartIndex - diffIndex;
+          this.endIndex = this.baseEndIndex - diffIndex;
+        }
+      }
+    },
+  },
+
+  created() {
+    this.startIndex = 0;
+    this.endIndex = this.data.length - 1;
+  },
+
+  mounted() {
+    this.ctx = this.$refs.graph.getContext('2d');
+    this.baseStartIndex = 0;
+    this.baseEndIndex = this.data.length - 1;
+
+    this.drawGraphBox();
+    this.drawGraph();
+    this.drawVerticalLines();
+
+    this.$refs.graph.ontouchstart = this.touchStartHandler;
+    this.$refs.graph.ontouchmove = this.touchMoveHandler;
+    this.$refs.graph.ontocuhcancel = this.touchEndhandler;
+    this.$refs.graph.ontouchend = this.touchEndhandler;
+  },
+
+  watch: {
+    startIndex() {
+      this.unitHeight = null;
+      this.timeData = [];
+      this.valueData = [];
+
+      this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+      this.drawGraphBox();
+      this.drawGraph();
+      this.drawVerticalLines();
+
+      this.$refs.graph.ontouchstart = this.touchStartHandler;
+      this.$refs.graph.ontouchmove = this.touchMoveHandler;
+      this.$refs.graph.ontocuhcancel = this.touchEndhandler;
+      this.$refs.graph.ontouchend = this.touchEndhandler;
+
+      this.drawSelectedLine();
+    },
+
+    selectedIndex() {
+      this.unitHeight = null;
+      this.timeData = [];
+      this.valueData = [];
+      this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+      this.drawGraphBox();
+      this.drawGraph();
+      this.drawVerticalLines();
+
+      this.$refs.graph.ontouchstart = this.touchStartHandler;
+      this.$refs.graph.ontouchmove = this.touchMoveHandler;
+      this.$refs.graph.ontocuhcancel = this.touchEndhandler;
+      this.$refs.graph.ontouchend = this.touchEndhandler;
+
+      this.drawSelectedLine();
+    },
+  },
+};
+</script>
+
+<style></style>
