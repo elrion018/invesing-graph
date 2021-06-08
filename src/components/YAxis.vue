@@ -60,15 +60,25 @@ export default {
 
   methods: {
     writeYAxis() {
-      this.valueData.forEach((value, index) => {
+      for (let i = 0; i < this.valueData.length; i++) {
+        let value = this.valueData[i];
         this.ctx.fillText(
           `${(this.floorValue + value).toFixed(3)}`,
           10,
           this.graphBoxMargin +
-            (this.graphBoxHeight / this.valueData.length) * index +
+            (this.graphBoxHeight / this.valueData.length) * i +
             4
         );
-      });
+      }
+      // this.valueData.forEach((value, index) => {
+      //   this.ctx.fillText(
+      //     `${(this.floorValue + value).toFixed(3)}`,
+      //     10,
+      //     this.graphBoxMargin +
+      //       (this.graphBoxHeight / this.valueData.length) * index +
+      //       4
+      //   );
+      // });
     },
 
     writeCurrent() {
