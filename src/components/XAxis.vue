@@ -51,15 +51,19 @@ export default {
 
   methods: {
     writeXAxis() {
-      this.timeData.forEach(([time, index]) => {
+      for (let i = 0; i < this.timeData.length; i++) {
+        let [time, index] = this.timeData[i];
+        time = new Date(time);
+        let displayedTime = `${time.getMonth() + 1}-${time.getDate()}`;
+
         this.ctx.fillText(
-          `${time}`,
+          displayedTime,
           this.graphBoxMargin +
             this.unitWidth * (index - this.startIndex) -
-            this.ctx.measureText(`${time}`).width / 2,
+            this.ctx.measureText(displayedTime).width / 2,
           20
         );
-      });
+      }
     },
   },
 

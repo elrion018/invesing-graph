@@ -149,7 +149,7 @@ export default {
     },
 
     currentValue() {
-      return this.data[this.endIndex][1];
+      return this.data[this.endIndex].close;
     },
   },
 
@@ -275,7 +275,8 @@ export default {
     drawVerticalLines() {
       this.ctx.globalAlpha = 0.2;
 
-      this.timeData.forEach(([time, index]) => {
+      for (let i = 0; i < this.timeData.length; i++) {
+        let index = this.timeData[i][1];
         this.ctx.beginPath();
         this.ctx.moveTo(
           this.graphBoxMargin + this.unitWidth * (index - this.startIndex),
@@ -287,15 +288,13 @@ export default {
         );
         this.ctx.closePath();
         this.ctx.stroke();
-        console.log(time);
-      });
+      }
 
       this.ctx.globalAlpha = 1.0;
     },
     drawSelectedLine() {
       if (this.selectedIndex !== null) {
         // X 축
-        // console.log(this.selectedIndex);
         this.ctx.beginPath();
         this.ctx.moveTo(
           this.graphBoxMargin,
@@ -498,6 +497,7 @@ export default {
   created() {
     this.startIndex = 0;
     this.endIndex = this.data.length - 1;
+    this.data.reverse();
 
     console.log(this.data);
   },
