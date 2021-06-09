@@ -155,13 +155,16 @@ export default {
             this.graphBoxHeight -
             (low - this.floorValue) * this.heightRatio;
 
-          this.ctx.fillStyle = 'red';
+          this.ctx.fillStyle = close >= open ? 'red' : 'blue';
+
+          let candleWidth = 5;
+
           this.ctx.fillRect(
             this.graphBoxMargin +
               this.unitWidth * (i - this.startIndex) -
-              this.unitWidth / 2,
+              candleWidth / 2,
             this.unitHeight,
-            5,
+            candleWidth,
             Math.abs(this.unitHeight - unitOpen)
           );
 
