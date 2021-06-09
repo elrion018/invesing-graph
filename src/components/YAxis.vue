@@ -50,6 +50,16 @@ export default {
       type: Number,
       required: true,
     },
+
+    selectedHeight: {
+      type: Number,
+      required: true,
+    },
+
+    selectedValue: {
+      type: Number,
+      required: true,
+    },
   },
 
   data() {
@@ -61,6 +71,16 @@ export default {
   methods: {
     writeYAxis() {
       for (let i = 0; i < this.valueData.length; i++) {
+        if (i === this.valueData.length - 1) {
+          this.ctx.fillText(
+            `${this.floorValue.toFixed(3)}`,
+            0,
+            this.graphBoxMargin +
+              (this.graphBoxHeight / this.valueData.length) * (i + 1) +
+              4
+          );
+        }
+
         let value = this.valueData[i];
         this.ctx.fillText(
           `${(this.floorValue + value).toFixed(3)}`,
@@ -72,13 +92,24 @@ export default {
       }
     },
 
-    writeCurrent() {
+    writeCurrentValue() {
       this.ctx.fillStyle = 'red';
       this.ctx.fillText(
         `${this.currentValue.toFixed(3)}`,
         0,
         this.currentHeight
       );
+      this.ctx.fillStyle = 'black';
+    },
+
+    writeSelectedValue() {
+      this.ctx.fillStyle = 'blue';
+      this.ctx.fillText(
+        `${this.selectedValue.toFixed(3)}`,
+        0,
+        this.selectedHeight
+      );
+
       this.ctx.fillStyle = 'black';
     },
   },
@@ -91,7 +122,8 @@ export default {
     valueData() {
       this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
       this.writeYAxis();
-      this.writeCurrent();
+      this.writeCurrentValue();
+      this.writeSelectedValue();
     },
   },
 };

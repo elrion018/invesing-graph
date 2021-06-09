@@ -11,6 +11,8 @@
         :graphBoxMargin="graphBoxMargin"
         :currentValue="currentValue"
         :currentHeight="currentHeight"
+        :selectedHeight="selectedHeight"
+        :selectedValue="selectedValue"
       ></y-axis>
     </div>
 
@@ -72,7 +74,7 @@ export default {
       targetEndIndex: null,
       startIndex: 0,
       selectedIndex: null,
-      selectedValue: null,
+      selectedValue: 0,
       endIndex: null,
       timeData: [],
       valueData: [],
@@ -108,6 +110,14 @@ export default {
 
     currentValue() {
       return this.data[this.endIndex].close;
+    },
+
+    selectedHeight() {
+      return (
+        this.graphBoxMargin +
+        this.graphBoxHeight -
+        (this.selectedValue - this.floorValue) * this.heightRatio
+      );
     },
   },
 
@@ -313,17 +323,10 @@ export default {
       if (this.selectedIndex !== null) {
         // X 축
         this.ctx.beginPath();
-        this.ctx.moveTo(
-          this.graphBoxMargin,
-          this.graphBoxMargin +
-            this.graphBoxHeight -
-            (this.selectedValue - this.floorValue) * this.heightRatio
-        );
+        this.ctx.moveTo(this.graphBoxMargin, this.selectedHeight);
         this.ctx.lineTo(
           this.graphBoxMargin + this.graphBoxWidth,
-          this.graphBoxMargin +
-            this.graphBoxHeight -
-            (this.selectedValue - this.floorValue) * this.heightRatio
+          this.selectedHeight
         );
         this.ctx.closePath();
         this.ctx.stroke();
