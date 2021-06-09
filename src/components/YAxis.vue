@@ -64,7 +64,7 @@ export default {
         let value = this.valueData[i];
         this.ctx.fillText(
           `${(this.floorValue + value).toFixed(3)}`,
-          10,
+          0,
           this.graphBoxMargin +
             (this.graphBoxHeight / this.valueData.length) * i +
             4
@@ -73,7 +73,13 @@ export default {
     },
 
     writeCurrent() {
-      this.ctx.fillText(`${this.currentValue}`, 10, this.currentHeight);
+      this.ctx.fillStyle = 'red';
+      this.ctx.fillText(
+        `${this.currentValue.toFixed(3)}`,
+        0,
+        this.currentHeight
+      );
+      this.ctx.fillStyle = 'black';
     },
   },
 

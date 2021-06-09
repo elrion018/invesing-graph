@@ -1,19 +1,16 @@
 <template>
   <div id="app">
-    <chart></chart>
-    <line-graph :canvasWidth="300" :canvasHeight="300"></line-graph>
+    <chart :canvasWidth="300" :canvasHeight="300"></chart>
   </div>
 </template>
 
 <script>
 import Chart from './components/Chart.vue';
-import LineGraph from './components/LineGraph.vue';
 
 export default {
   name: 'App',
   components: {
     Chart,
-    LineGraph,
   },
 };
 </script>
