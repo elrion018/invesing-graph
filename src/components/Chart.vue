@@ -271,7 +271,7 @@ export default {
       let ceilValue = Number.MIN_VALUE;
       let floorValue = Number.MAX_VALUE;
 
-      for (let i = this.startIndex; i < this.endIndex + 1; i++) {
+      for (let i = 0; i < this.data.length; i++) {
         let { close: value } = this.data[i];
 
         ceilValue = Math.max(ceilValue, value);
