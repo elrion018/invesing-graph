@@ -45,7 +45,7 @@ export default {
 
     canvasHeight: {
       type: Number,
-      default: 50,
+      default: 20,
     },
   },
 
@@ -61,7 +61,7 @@ export default {
           this.graphBoxMargin +
             this.unitWidth * (index - this.startIndex) -
             this.ctx.measureText(displayedTime).width / 2,
-          20
+          10
         );
       }
     },

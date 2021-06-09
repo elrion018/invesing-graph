@@ -21,12 +21,18 @@
       :graphBoxMargin="graphBoxMargin"
       :canvasWidth="canvasWidth + yAxisWidth"
     ></x-axis>
+    <chart-menu
+      :canvasWidth="canvasWidth + yAxisWidth"
+      @handle-chart-menu-button-click="handleChartMenuButtonClick"
+    />
   </div>
 </template>
 
 <script>
 import XAxis from './XAxis.vue';
 import YAxis from './YAxis.vue';
+import ChartMenu from './ChartMenu.vue';
+
 import chartData from '../../chartData.json';
 
 export default {
@@ -34,6 +40,7 @@ export default {
   components: {
     XAxis,
     YAxis,
+    ChartMenu,
   },
 
   props: {
@@ -131,11 +138,8 @@ export default {
       }
 
       if (this.isCandle) {
-        //
-
         for (let i = this.startIndex; i < this.endIndex + 1; i++) {
           const { date: time, close, open, high, low } = this.data[i];
-          console.log(time, close, open, high, low);
 
           this.unitHeight =
             this.graphBoxMargin +
@@ -158,6 +162,7 @@ export default {
             (low - this.floorValue) * this.heightRatio;
 
           this.ctx.fillStyle = close >= open ? 'red' : 'blue';
+          this.ctx.strokeStyle = close >= open ? 'red' : 'blue';
 
           let candleWidth = 5;
 
@@ -179,6 +184,8 @@ export default {
             this.graphBoxMargin + this.unitWidth * (i - this.startIndex),
             unitLow
           );
+
+          this.ctx.strokeStyle = this.graphColor;
 
           if (i % interval === 0) {
             this.timeData.push([time, i]);
@@ -209,6 +216,7 @@ export default {
           this.graphBoxMargin + this.graphBoxHeight
         );
       }
+
       this.ctx.closePath();
       this.ctx.stroke();
 
@@ -500,6 +508,33 @@ export default {
         }
       }
     },
+
+    handleChartMenuButtonClick(event) {
+      const { value } = event.target;
+      console.log(value);
+
+      if (value === 'Linear') {
+        this.isCandle = false;
+      }
+    },
+
+    redrawForWatch() {
+      this.unitHeight = null;
+      this.timeData = [];
+      this.valueData = [];
+
+      this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+      this.drawGraphBox();
+      this.drawGraph();
+      this.drawVerticalLines();
+
+      this.$refs.graph.ontouchstart = this.touchStartHandler;
+      this.$refs.graph.ontouchmove = this.touchMoveHandler;
+      this.$refs.graph.ontocuhcancel = this.touchEndhandler;
+      this.$refs.graph.ontouchend = this.touchEndhandler;
+
+      this.drawSelectedLine();
+    },
   },
 
   created() {
@@ -528,38 +563,15 @@ export default {
 
   watch: {
     startIndex() {
-      this.unitHeight = null;
-      this.timeData = [];
-      this.valueData = [];
+      this.redrawForWatch();
+    },
 
-      this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-      this.drawGraphBox();
-      this.drawGraph();
-      this.drawVerticalLines();
-
-      this.$refs.graph.ontouchstart = this.touchStartHandler;
-      this.$refs.graph.ontouchmove = this.touchMoveHandler;
-      this.$refs.graph.ontocuhcancel = this.touchEndhandler;
-      this.$refs.graph.ontouchend = this.touchEndhandler;
-
-      this.drawSelectedLine();
+    isCandle() {
+      this.redrawForWatch();
     },
 
     selectedIndex() {
-      this.unitHeight = null;
-      this.timeData = [];
-      this.valueData = [];
-      this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-      this.drawGraphBox();
-      this.drawGraph();
-      this.drawVerticalLines();
-
-      this.$refs.graph.ontouchstart = this.touchStartHandler;
-      this.$refs.graph.ontouchmove = this.touchMoveHandler;
-      this.$refs.graph.ontocuhcancel = this.touchEndhandler;
-      this.$refs.graph.ontouchend = this.touchEndhandler;
-
-      this.drawSelectedLine();
+      this.redrawForWatch();
     },
   },
 };
