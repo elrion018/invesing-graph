@@ -29,11 +29,20 @@
       1Y
     </button>
     <button
+      v-if="isCandle"
       class="chart-menu-button"
       @click="$emit('handle-chart-menu-button-click', $event)"
       value="Linear"
     >
       Linear
+    </button>
+    <button
+      v-if="!isCandle"
+      class="chart-menu-button"
+      @click="$emit('handle-chart-menu-button-click', $event)"
+      value="Candle"
+    >
+      Candle
     </button>
   </div>
 </template>
@@ -50,6 +59,11 @@ export default {
     canvasHeight: {
       type: Number,
       default: 20,
+    },
+
+    isCandle: {
+      type: Boolean,
+      required: true,
     },
   },
 

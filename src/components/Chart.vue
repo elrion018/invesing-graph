@@ -23,6 +23,7 @@
     ></x-axis>
     <chart-menu
       :canvasWidth="canvasWidth + yAxisWidth"
+      :isCandle="isCandle"
       @handle-chart-menu-button-click="handleChartMenuButtonClick"
     />
   </div>
@@ -511,10 +512,13 @@ export default {
 
     handleChartMenuButtonClick(event) {
       const { value } = event.target;
-      console.log(value);
 
       if (value === 'Linear') {
         this.isCandle = false;
+      }
+
+      if (value === 'Candle') {
+        this.isCandle = true;
       }
     },
 
